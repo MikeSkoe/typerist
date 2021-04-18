@@ -1,0 +1,1 @@
+dune exe ./main.exe
