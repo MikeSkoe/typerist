@@ -1,55 +1,8 @@
-open Notty
 module Term = Notty_unix.Term
+open Lwt.Infix
+open Lwt.Syntax
 
-let rec repeat str =
-      function
-      | 0 -> str
-      | num -> repeat (str ^ str) (num - 1)
-
-module State = struct
-      type model = {
-            target: string;
-            typed: string;
-            current_word: string;
-            width: int;
-      }
-
-      type msg =
-            | Resize of int * int
-            | TypeChar of char
-            | Quit
-            | NoOp
-
-      let initial_state = {
-            target = "one two three four five six seven eight nine ten eleven twelve";
-            typed = "";
-            current_word = "";
-            width = 100
-      }
-
-      let update (model, msg) =
-            let model =
-                  match msg with
-                  | Resize (w, _h) -> { model with width = w }
-                  | Quit -> model
-                  | NoOp -> model
-                  | TypeChar ch ->
-                        match ch with
-                        | ' ' ->
-                              let space = if model.typed = "" then "" else " " in
-                              { model with
-                                    typed = model.typed ^ space ^ model.current_word;
-                                    current_word = "";
-                              }
-                        | ch ->
-                              let char_str = Char.escaped ch in
-                              { model with
-                                    current_word = (model.current_word ^ char_str);
-                              }
-            in
-            (model, msg)
-end
-
+(*
 module TextUI = struct
       let fit_string str width =
             let split_words = String.split_on_char ' ' in
@@ -78,31 +31,54 @@ end
 module UI = struct
       let term = Term.create ()
 
-      let update ((model, _msg): State.model * State.msg) =
-            let target = TextUI.i ~text:model.target ~width:model.width in
-            let typed = TextUI.i ~text:model.typed ~width:model.width in
-            let current_word = TextUI.i ~text:model.current_word ~width:model.width in
-            I.(target <-> typed <-> current_word) |> Term.image term;
+      let update ((model, _msg): Edit.model * Edit.msg) =
+            let typed = String.concat " " model.typed in
+            let source = String.concat " " model.source in
+            let current = model.current in
+            I.(
+                  TextUI.i ~text:typed ~width:model.width
+                  <-> TextUI.i ~text:source ~width:model.width
+                  <-> TextUI.i ~text:current ~width:model.width
+            ) |> Term.image term;
 
             let msg =
                   match Term.event term with
-                  | `Resize (w, h) -> State.Resize (w, h)
-                  | `Key ((`ASCII ch), _) -> State.TypeChar ch
-                  | _ -> State.Quit
+                  | `Resize (w, h) -> Edit.Resize (w, h)
+                  | `Key ((`ASCII ch), _) -> Edit.TypeChar ch
+                  | _ -> Edit.Quit
             in
             (model, msg)
 end
+*)
 
-let main () =
+let main_lwt () =
+      let update = Model.update Ui.term in
+
+      let rec loop (lmsg, rmsg, model) =
+            let* _ = Ui.draw model in
+            let* msg = (lmsg <?> rmsg) in
+            let model, thread_msg = update msg model in
+            match thread_msg with
+            | `Exit -> Lwt.return_unit
+            | `Left lmsg -> loop (lmsg, rmsg, model)
+            | `Right rmsg -> loop (lmsg, rmsg, model)
+            | `NOOP -> loop (lmsg, rmsg, model)
+      in
+      loop (
+            (Lwt.return @@ `Edit (Edit.Key 'c')),
+            (Lwt.return @@ `Edit Edit.Tick),
+            Model.empty
+      )
+
+let () = Lwt_main.run @@ main_lwt ()
+
+(* let main () =
       let rec loop (model, msg) =
             match msg with
-            | State.Quit -> ()
+            | Edit.Quit -> ()
             | _ -> (model, msg)
-                  |> State.update
+                  |> Edit.update
                   |> UI.update
                   |> loop in
 
-      loop (State.initial_state, State.NoOp)
-
-let _ = main ()
-
+      loop (Edit.initial_state, Edit.NoOp) *)
