@@ -8,17 +8,22 @@ let rec repeat str =
 
 module State = struct
       type model = {
-            text: string;
+            target: string;
+            typed: string;
+            current_word: string;
             width: int;
       }
 
       type msg =
             | Resize of int * int
+            | TypeChar of char
             | Quit
             | NoOp
 
       let initial_state = {
-            text = "one two three four five six seven eight nine ten eleven twelve";
+            target = "one two three four five six seven eight nine ten eleven twelve";
+            typed = "";
+            current_word = "";
             width = 100
       }
 
@@ -28,6 +33,19 @@ module State = struct
                   | Resize (w, _h) -> { model with width = w }
                   | Quit -> model
                   | NoOp -> model
+                  | TypeChar ch ->
+                        match ch with
+                        | ' ' ->
+                              let space = if model.typed = "" then "" else " " in
+                              { model with
+                                    typed = model.typed ^ space ^ model.current_word;
+                                    current_word = "";
+                              }
+                        | ch ->
+                              let char_str = Char.escaped ch in
+                              { model with
+                                    current_word = (model.current_word ^ char_str);
+                              }
             in
             (model, msg)
 end
@@ -61,13 +79,15 @@ module UI = struct
       let term = Term.create ()
 
       let update ((model, _msg): State.model * State.msg) =
-            let text = TextUI.i ~text:model.text ~width:model.width in
-            text
-                  |> Term.image term;
+            let target = TextUI.i ~text:model.target ~width:model.width in
+            let typed = TextUI.i ~text:model.typed ~width:model.width in
+            let current_word = TextUI.i ~text:model.current_word ~width:model.width in
+            I.(target <-> typed <-> current_word) |> Term.image term;
 
             let msg =
                   match Term.event term with
                   | `Resize (w, h) -> State.Resize (w, h)
+                  | `Key ((`ASCII ch), _) -> State.TypeChar ch
                   | _ -> State.Quit
             in
             (model, msg)
