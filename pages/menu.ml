@@ -32,7 +32,8 @@ let get_event term =
       function
       | Some (`Key (`Arrow `Up, _)) -> `Menu (Shift Up)
       | Some (`Key (`Arrow `Down, _)) -> `Menu (Shift Down)
-      | _ -> `Exit
+      | Some (`Key (`Enter, _)) -> `Navigation Navigation.ToEdit
+      | _ -> `Navigation Navigation.Exit
 
 let get_tick () = Lwt_unix.sleep 1.0 >|= fun () -> `Menu Tick
 

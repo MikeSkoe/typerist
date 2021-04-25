@@ -1,6 +1,7 @@
 open Pages
 
 type msg = [
+      | `Navigation of Navigation.msg
       | `Edit of Edit.msg
       | `Menu of Menu.msg
 ]
@@ -23,17 +24,27 @@ type thread = [
       | `Exit
       | `Left of msg Lwt.t
       | `Right of msg Lwt.t
+      | `Both of msg Lwt.t * msg Lwt.t
 ]
 
 let update term msg model =
       let page, thread =
             match msg with
-            | `Exit ->
-                  model.page,
-                  `Exit
+            | `Navigation msg ->
+                  begin match msg with
+                  | Navigation.ToEdit ->
+                        Edit Edit.empty
+                        , `Both (Edit.get_event term, Edit.get_tick ())
+                  | Navigation.ToMenu ->
+                        Menu Menu.empty
+                        , `Both (Menu.get_event term, Menu.get_tick ())
+                  | Navigation.Exit ->
+                        model.page
+                        , `Exit
+                  end
             | `Edit msg ->
                   begin match model.page with 
-                  | Edit page -> 
+                  | Edit page ->
                         let (page, thread) = Edit.update term msg page in
                         Edit page, thread
                   | _ ->

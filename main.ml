@@ -14,10 +14,11 @@ let main_lwt () =
             | `Exit -> Lwt.return_unit
             | `Left lmsg -> loop (lmsg, rmsg, model)
             | `Right rmsg -> loop (lmsg, rmsg, model)
+            | `Both (lmsg, rmsg) -> loop (lmsg, rmsg, model)
       in
       loop (
-            Menu.get_event Ui.term,
-            Lwt.return (`Menu Menu.Tick),
+            Edit.get_event Ui.term,
+            Edit.get_tick (),
             Model.empty
       )
 

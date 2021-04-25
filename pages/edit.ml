@@ -57,9 +57,9 @@ let get_event term =
       | Some (`Key (`ASCII chr, _)) -> `Edit (Key chr)
       | Some (`Key (`Backspace, _)) -> `Edit Backspace
       | Some (`Resize _) -> `Edit Resize
-      | _ -> `Exit
+      | _ -> `Navigation Navigation.ToMenu
 
-let get_tick () = Lwt_unix.sleep 999.0 >|= fun () -> `Edit Tick
+let get_tick () = Lwt_unix.sleep 1.0 >|= fun () -> `Edit Tick
 
 let update term msg model =
       match msg with
