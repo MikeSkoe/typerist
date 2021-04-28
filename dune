@@ -1,3 +1,3 @@
 (executable
   (name main)
-  (libraries pages))
+  (libraries pages ui))
