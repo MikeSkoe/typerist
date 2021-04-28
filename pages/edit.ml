@@ -67,11 +67,14 @@ let update term model msg (lmsg, rmsg) =
             model
             , (get_event term, rmsg)
       | Tick -> 
-            tick model
+            let model = tick model in
+            model
             , (lmsg, get_tick ())
       | Backspace ->
-            backspace model
+            let model = backspace model in
+            model
             , (get_event term, rmsg)
       | Key chr ->
-            type_char chr model
+            let model = type_char chr model in
+            model
             , (get_event term, rmsg)

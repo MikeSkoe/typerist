@@ -37,14 +37,11 @@ let menu (model: Menu.model) =
             else A.empty
       in
       I.(
-            TextUI.make "first"
-                  ~style:(active_if Menu.First)
+            TextUI.make "start"
+                  ~style:(active_if Menu.Start)
                   ~width:term_width ()
-            <-> TextUI.make "second"
-                  ~style:(active_if Menu.Second)
-                  ~width:term_width ()
-            <-> TextUI.make "third"
-                  ~style:(active_if Menu.Third)
+            <-> TextUI.make "exit"
+                  ~style:(active_if Menu.Exit)
                   ~width:term_width ()
       )
 

@@ -18,7 +18,7 @@ type model = {
 
 let empty = {
       user = "<USER NAME>";
-      page = Edit Edit.empty
+      page = Menu Menu.empty
 }
 
 let update term loop model (lmsg, rmsg)  =
@@ -35,7 +35,7 @@ let update term loop model (lmsg, rmsg)  =
             | Navigation.ToMenu ->
                   loop
                         { model with page = Menu Menu.empty }
-                        (Menu.get_event term, Menu.get_tick ())
+                        (Menu.get_event term Menu.empty, Menu.get_tick ())
             end
       | `Edit msg ->
             begin match model.page with 

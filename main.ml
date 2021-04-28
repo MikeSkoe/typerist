@@ -9,6 +9,6 @@ let main_lwt () =
       in
       loop 
             Model.empty
-            (Edit.get_event Ui.term, Edit.get_tick ())
+            (Menu.get_event Ui.term Menu.empty, Menu.get_tick ())
 
 let () = Lwt_main.run @@ main_lwt ()
