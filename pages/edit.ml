@@ -61,17 +61,17 @@ let get_event term =
 
 let get_tick () = Lwt_unix.sleep 1.0 >|= fun () -> `Edit Tick
 
-let update term msg model =
+let update term model msg (lmsg, rmsg) =
       match msg with
       | Resize ->
             model
-            , `Left (get_event term)
+            , (get_event term, rmsg)
       | Tick -> 
             tick model
-            , `Right (get_tick ())
+            , (lmsg, get_tick ())
       | Backspace ->
             backspace model
-            , `Left (get_event term)
+            , (get_event term, rmsg)
       | Key chr ->
             type_char chr model
-            , `Left (get_event term)
+            , (get_event term, rmsg)

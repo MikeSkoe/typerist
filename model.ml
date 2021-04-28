@@ -1,4 +1,5 @@
 open Pages
+open Lwt.Infix
 
 type msg = [
       | `Navigation of Navigation.msg
@@ -20,46 +21,46 @@ let empty = {
       page = Edit Edit.empty
 }
 
-type thread = [
-      | `Exit
-      | `Left of msg Lwt.t
-      | `Right of msg Lwt.t
-      | `Both of msg Lwt.t * msg Lwt.t
-]
+let update term loop model (lmsg, rmsg)  =
+      (lmsg <?> rmsg) >>=
+      function
+      | `Navigation msg ->
+            begin match msg with
+            | Navigation.Exit ->
+                  Lwt.return_unit
+            | Navigation.ToEdit ->
+                  loop 
+                        { model with page = Edit Edit.empty }
+                        (Edit.get_event term, Edit.get_tick ())
+            | Navigation.ToMenu ->
+                  loop
+                        { model with page = Menu Menu.empty }
+                        (Menu.get_event term, Menu.get_tick ())
+            end
+      | `Edit msg ->
+            begin match model.page with 
+            | Edit page ->
+                  let page, (lmsg, rmsg) = Edit.update term page msg (lmsg, rmsg) in
+                  loop
+                        { model with page = Edit page }
+                        (lmsg, rmsg)
+            | _ ->
+                  let page, (lmsg, rmsg) = Edit.update term Edit.empty msg (lmsg, rmsg) in
+                  loop
+                        { model with page = Edit page }
+                        (lmsg, rmsg)
+            end
+      | `Menu msg ->
+            begin match model.page with
+            | Menu page ->
+                  let page, (lmsg, rmsg) = Menu.update term page msg (lmsg, rmsg)  in
+                  loop
+                        { model with page = Menu page }
+                        (lmsg, rmsg)
+            | _ ->
+                  let page, (lmsg, rmsg) = Menu.update term Menu.empty msg (lmsg, rmsg) in
+                  loop
+                        { model with page = Menu page }
+                        (lmsg, rmsg)
+            end
 
-let update term msg model =
-      let page, thread =
-            match msg with
-            | `Navigation msg ->
-                  begin match msg with
-                  | Navigation.ToEdit ->
-                        Edit Edit.empty
-                        , `Both (Edit.get_event term, Edit.get_tick ())
-                  | Navigation.ToMenu ->
-                        Menu Menu.empty
-                        , `Both (Menu.get_event term, Menu.get_tick ())
-                  | Navigation.Exit ->
-                        model.page
-                        , `Exit
-                  end
-            | `Edit msg ->
-                  begin match model.page with 
-                  | Edit page ->
-                        let (page, thread) = Edit.update term msg page in
-                        Edit page, thread
-                  | _ ->
-                        let (page, thread) = Edit.update term msg Edit.empty in
-                        Edit page, thread
-                  end
-            | `Menu msg ->
-                  begin match model.page with
-                  | Menu page ->
-                        let (page, thread) = Menu.update term msg page in
-                        Menu page, thread
-                  | _ ->
-                        let (page, thread) = Menu.update term msg Menu.empty in
-                        Menu page, thread
-                  end
-      in
-      { model with page = page }
-      , thread
