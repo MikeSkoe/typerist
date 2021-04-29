@@ -8,7 +8,7 @@ let main_lwt () =
             Model.update Ui.term loop model (lmsg, rmsg)
       in
       loop 
-            Model.empty
-            (Menu.get_event Ui.term Menu.empty, Menu.get_tick ())
+            Model.(empty ())
+            (Menu.get_event Ui.term Menu.(empty ()), Menu.get_tick ())
 
 let () = Lwt_main.run @@ main_lwt ()

@@ -7,22 +7,34 @@ type msg =
       | Resize
 
 type model = {
-      time: int;
-      typed: string list;
+      initial_text: string;
+      initial_time: int;
+      char_per_sec: int;
+      typed: string;
       current: string;
       target: string list;
 }
 
-let empty = {
-      time = 0;
-      typed = [];
+let initial_text = "This is some long text, just to test your typing abbiliry..."
+
+let empty () = {
+      initial_text = initial_text;
+      initial_time = Unix.time () |> int_of_float;
+      char_per_sec = 0;
+      typed = "";
       current = "";
-      target = String.split_on_char ' ' "this is the text to type";
+      target = String.split_on_char ' ' initial_text;
 }
+
+let get_char_per_sec initial_time typed = 
+      let chars = String.length typed in
+      let curr_time = Unix.time () |> int_of_float in
+      let ellapsed = curr_time - initial_time in
+      chars / ellapsed
 
 let tick model = {
       model with
-      time = model.time + 1;
+      char_per_sec = get_char_per_sec model.initial_time model.typed;
 }
 
 let type_char chr model =
@@ -33,7 +45,10 @@ let type_char chr model =
             | target_hd :: taret_tl when current = target_hd -> {
                   model with
                   current = ""; 
-                  typed = model.typed @ [current];
+                  typed =
+                        if model.typed = ""
+                        then current
+                        else model.typed ^ " " ^ current;
                   target = taret_tl;
             }
             | _ -> model
@@ -60,6 +75,7 @@ let get_event term =
       | _ -> `Navigation Navigation.ToMenu
 
 let get_tick () = Lwt_unix.sleep 1.0 >|= fun () -> `Edit Tick
+let get_deferred () = Lwt_unix.sleep 999.0 >|= fun () -> `Edit Tick
 
 let update term model msg (lmsg, rmsg) =
       match msg with
@@ -77,4 +93,10 @@ let update term model msg (lmsg, rmsg) =
       | Key chr ->
             let model = type_char chr model in
             model
-            , (get_event term, rmsg)
+            , (
+                  get_event term
+                  ,
+                  if model.typed = model.initial_text
+                  then get_deferred ()
+                  else rmsg
+            )

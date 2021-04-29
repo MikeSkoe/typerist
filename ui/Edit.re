@@ -8,8 +8,7 @@ let createElement = (
     ~children as _=[],
     ()
 ) => {
-    let time = Printf.sprintf("time: %d", model.time);
-    let typed = String.concat(" ", model.typed);
+    let time = Printf.sprintf("CPS: %d", model.char_per_sec);
     let (target_hd, target_tl) = switch (model.target) {
         | [] => ("" , "")
         | [head, ...tail] => (
@@ -24,14 +23,12 @@ let createElement = (
     <VList>
         <Text text=time width pad=(0,0,0,1)/>
         <HList>
-            ((typed === "")
-                ? I.empty
-                : <Text
-                    text=typed
-                    width
-                    style=A.(fg(gray(10)))
-                    pad=(0,1,0,0)
-                />)
+            <Text
+                text=model.typed
+                width
+                style=A.(fg(gray(10)))
+                pad=(model.typed == "" ? (0,0,0,0) : (0,1,0,0))
+            />
             <Text
                 text=target_hd
                 width

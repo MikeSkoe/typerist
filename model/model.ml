@@ -16,9 +16,9 @@ type model = {
       page: page;
 }
 
-let empty = {
+let empty () = {
       user = "<USER NAME>";
-      page = Menu Menu.empty
+      page = Menu Menu.(empty ())
 }
 
 let update term loop model (lmsg, rmsg)  =
@@ -30,12 +30,12 @@ let update term loop model (lmsg, rmsg)  =
                   Lwt.return_unit
             | Navigation.ToEdit ->
                   loop 
-                        { model with page = Edit Edit.empty }
+                        { model with page = Edit Edit.(empty ()) }
                         (Edit.get_event term, Edit.get_tick ())
             | Navigation.ToMenu ->
                   loop
-                        { model with page = Menu Menu.empty }
-                        (Menu.get_event term Menu.empty, Menu.get_tick ())
+                        { model with page = Menu Menu.(empty ()) }
+                        (Menu.get_event term Menu.(empty ()), Menu.get_tick ())
             end
       | `Edit msg ->
             begin match model.page with 
@@ -45,7 +45,7 @@ let update term loop model (lmsg, rmsg)  =
                         { model with page = Edit page }
                         (lmsg, rmsg)
             | _ ->
-                  let page, (lmsg, rmsg) = Edit.update term Edit.empty msg (lmsg, rmsg) in
+                  let page, (lmsg, rmsg) = Edit.update term Edit.(empty ()) msg (lmsg, rmsg) in
                   loop
                         { model with page = Edit page }
                         (lmsg, rmsg)
@@ -58,7 +58,7 @@ let update term loop model (lmsg, rmsg)  =
                         { model with page = Menu page }
                         (lmsg, rmsg)
             | _ ->
-                  let page, (lmsg, rmsg) = Menu.update term Menu.empty msg (lmsg, rmsg) in
+                  let page, (lmsg, rmsg) = Menu.update term Menu.(empty ()) msg (lmsg, rmsg) in
                   loop
                         { model with page = Menu page }
                         (lmsg, rmsg)

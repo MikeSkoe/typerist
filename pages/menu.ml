@@ -16,7 +16,7 @@ type model = {
       active: menu_option
 }
 
-let empty = {
+let empty () = {
       active = Start
 }
 
