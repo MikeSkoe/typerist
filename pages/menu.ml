@@ -39,14 +39,18 @@ let get_event term model =
 
 let get_tick () = Lwt_unix.sleep 1.0 >|= fun () -> `Menu Tick
 
-let update term model msg (lmsg, rmsg) =
+let update term model msg lmsg rmsg =
       match msg with
       | Tick ->
+            let rmsg = get_tick () in
             model
-            , (lmsg, get_tick ())
+            , lmsg
+            , rmsg 
       | Shift direction ->
             let model = shift direction model in
+            let lmsg = get_event term model in
             model
-            , (get_event term model, rmsg)
+            , lmsg
+            , rmsg
 
             

@@ -21,7 +21,7 @@ let empty () = {
       page = Menu Menu.(empty ())
 }
 
-let update term loop model (lmsg, rmsg)  =
+let update term loop model lmsg rmsg  =
       (lmsg <?> rmsg) >>=
       function
       | `Navigation msg ->
@@ -31,36 +31,42 @@ let update term loop model (lmsg, rmsg)  =
             | Navigation.ToEdit ->
                   loop 
                         { model with page = Edit Edit.(empty ()) }
-                        (Edit.get_event term, Edit.get_tick ())
+                        Edit.(get_event term)
+                        Edit.(get_tick ())
             | Navigation.ToMenu ->
                   loop
                         { model with page = Menu Menu.(empty ()) }
-                        (Menu.get_event term Menu.(empty ()), Menu.get_tick ())
+                        Menu.(get_event term Menu.(empty ()))
+                        Menu.(get_tick ())
             end
       | `Edit msg ->
             begin match model.page with 
             | Edit page ->
-                  let page, (lmsg, rmsg) = Edit.update term page msg (lmsg, rmsg) in
+                  let page, lmsg, rmsg = Edit.update term page msg lmsg rmsg in
                   loop
                         { model with page = Edit page }
-                        (lmsg, rmsg)
+                        lmsg
+                        rmsg
             | _ ->
-                  let page, (lmsg, rmsg) = Edit.update term Edit.(empty ()) msg (lmsg, rmsg) in
+                  let page, lmsg, rmsg = Edit.update term Edit.(empty ()) msg lmsg rmsg in
                   loop
                         { model with page = Edit page }
-                        (lmsg, rmsg)
+                        lmsg
+                        rmsg
             end
       | `Menu msg ->
             begin match model.page with
             | Menu page ->
-                  let page, (lmsg, rmsg) = Menu.update term page msg (lmsg, rmsg)  in
+                  let page, lmsg, rmsg = Menu.update term page msg lmsg rmsg  in
                   loop
                         { model with page = Menu page }
-                        (lmsg, rmsg)
+                        lmsg
+                        rmsg
             | _ ->
-                  let page, (lmsg, rmsg) = Menu.update term Menu.(empty ()) msg (lmsg, rmsg) in
+                  let page, lmsg, rmsg = Menu.update term Menu.(empty ()) msg lmsg rmsg in
                   loop
                         { model with page = Menu page }
-                        (lmsg, rmsg)
+                        lmsg
+                        rmsg
             end
 

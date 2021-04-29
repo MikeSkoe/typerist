@@ -77,26 +77,33 @@ let get_event term =
 let get_tick () = Lwt_unix.sleep 1.0 >|= fun () -> `Edit Tick
 let get_deferred () = Lwt_unix.sleep 999.0 >|= fun () -> `Edit Tick
 
-let update term model msg (lmsg, rmsg) =
+let update term model msg lmsg rmsg =
       match msg with
       | Resize ->
+            let lmsg = get_event term in
             model
-            , (get_event term, rmsg)
+            , lmsg
+            , rmsg
       | Tick -> 
             let model = tick model in
+            let rmsg = get_tick () in
             model
-            , (lmsg, get_tick ())
+            , lmsg
+            , rmsg
       | Backspace ->
             let model = backspace model in
+            let lmsg = get_event term in
             model
-            , (get_event term, rmsg)
+            , lmsg 
+            , rmsg
       | Key chr ->
             let model = type_char chr model in
-            model
-            , (
-                  get_event term
-                  ,
+            let lmsg = get_event term in
+            let rmsg = 
                   if model.typed = model.initial_text
                   then get_deferred ()
                   else rmsg
-            )
+            in
+            model
+            , lmsg
+            , rmsg
