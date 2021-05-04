@@ -1,6 +1,7 @@
-module Term = Notty_unix.Term
-open Lwt.Infix
+open Lwt
 open Pages
+
+module Term = Notty_unix.Term
 
 let main_lwt () =
       let rec loop model lmsg rmsg =

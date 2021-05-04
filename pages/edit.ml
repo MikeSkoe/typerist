@@ -5,6 +5,7 @@ type msg =
       | Key of char
       | Backspace
       | Resize
+      | SetString of string
 
 type model = {
       initial_text: string;
@@ -66,6 +67,11 @@ let backspace model =
             current = String.sub current 0 String.(length current - 1)
       }
 
+let set_string str model = {
+      model with
+      target = String.split_on_char ' ' str;
+}
+
 let get_event term =
       (Notty_lwt.Term.events term |> Lwt_stream.get) >|=
       function
@@ -73,6 +79,20 @@ let get_event term =
       | Some (`Key (`Backspace, _)) -> `Edit Backspace
       | Some (`Resize _) -> `Edit Resize
       | _ -> `Navigation Navigation.ToMenu
+
+let get_string () =
+      let open Cohttp_lwt_unix in
+      let open Yojson.Basic in
+      let reques = "https://api.adviceslip.com/advice"
+            |> Uri.of_string
+            |> Client.get
+      in 
+      reques >>= fun (_, body) ->
+      Cohttp_lwt.Body.to_string body >>= fun body ->
+
+      let json = from_string body in
+      let slip = json |> Util.member "slip" |> Util.member "advice" |> to_string in
+      Lwt.return @@ `Edit (SetString slip)
 
 let get_tick () = Lwt_unix.sleep 1.0 >|= fun () -> `Edit Tick
 let get_deferred () = Lwt_unix.sleep 999.0 >|= fun () -> `Edit Tick
@@ -104,6 +124,13 @@ let update term model msg lmsg rmsg =
                   then get_deferred ()
                   else rmsg
             in
+            model
+            , lmsg
+            , rmsg
+      | SetString str ->
+            let model = set_string str model in
+            let lmsg = get_event term in
+            let rmsg = get_tick () in
             model
             , lmsg
             , rmsg

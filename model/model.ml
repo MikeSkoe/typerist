@@ -31,7 +31,7 @@ let update term loop model lmsg rmsg  =
             | Navigation.ToEdit ->
                   loop 
                         { model with page = Edit Edit.(empty ()) }
-                        Edit.(get_event term)
+                        Edit.(get_string ())
                         Edit.(get_tick ())
             | Navigation.ToMenu ->
                   loop
