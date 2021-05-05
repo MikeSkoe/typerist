@@ -43,14 +43,8 @@ let update term model msg lmsg rmsg =
       match msg with
       | Tick ->
             let rmsg = get_tick () in
-            model
-            , lmsg
-            , rmsg 
+            (model, lmsg, rmsg)
       | Shift direction ->
             let model = shift direction model in
             let lmsg = get_event term model in
-            model
-            , lmsg
-            , rmsg
-
-            
+            (model, lmsg, rmsg)

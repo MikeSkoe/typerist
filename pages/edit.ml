@@ -56,7 +56,7 @@ let type_char chr model =
             end
       | (chr, current) -> {
             model with
-            current = current ^ Char.escaped chr;
+            current = current ^ String.make 1 chr;
       }
 
 let backspace model =
@@ -91,7 +91,12 @@ let get_string () =
       Cohttp_lwt.Body.to_string body >>= fun body ->
 
       let json = from_string body in
-      let slip = json |> Util.member "slip" |> Util.member "advice" |> to_string in
+      let slip =
+            json
+            |> Util.member "slip"
+            |> Util.member "advice"
+            |> Util.to_string
+      in
       Lwt.return @@ `Edit (SetString slip)
 
 let get_tick () = Lwt_unix.sleep 1.0 >|= fun () -> `Edit Tick
@@ -101,21 +106,15 @@ let update term model msg lmsg rmsg =
       match msg with
       | Resize ->
             let lmsg = get_event term in
-            model
-            , lmsg
-            , rmsg
+            (model, lmsg, rmsg)
       | Tick -> 
             let model = tick model in
             let rmsg = get_tick () in
-            model
-            , lmsg
-            , rmsg
+            (model, lmsg, rmsg)
       | Backspace ->
             let model = backspace model in
             let lmsg = get_event term in
-            model
-            , lmsg 
-            , rmsg
+            (model, lmsg, rmsg)
       | Key chr ->
             let model = type_char chr model in
             let lmsg = get_event term in
@@ -124,13 +123,9 @@ let update term model msg lmsg rmsg =
                   then get_deferred ()
                   else rmsg
             in
-            model
-            , lmsg
-            , rmsg
+            (model, lmsg, rmsg)
       | SetString str ->
             let model = set_string str model in
             let lmsg = get_event term in
             let rmsg = get_tick () in
-            model
-            , lmsg
-            , rmsg
+            (model, lmsg, rmsg)
