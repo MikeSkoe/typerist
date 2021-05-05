@@ -32,7 +32,7 @@ let update term loop model lmsg rmsg  =
                   loop 
                         { model with page = Edit Edit.(empty ()) }
                         Edit.(get_string ())
-                        Edit.(get_tick ())
+                        Edit.(get_never ())
             | Navigation.ToMenu ->
                   loop
                         { model with page = Menu Menu.(empty ()) }
