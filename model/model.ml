@@ -11,13 +11,34 @@ type page =
       | Edit of Edit.model
       | Menu of Menu.model
 
+module Stats = struct
+      type t = {
+            chars_per_sec: int;
+            words_per_minute: int;
+      }
+
+      let empty = {
+            chars_per_sec = 0;
+            words_per_minute = 0;
+      }
+
+      let get_cps str_len seconds = str_len / seconds
+
+      let get_wpm word_count seconds =
+            let word_count = float_of_int word_count in
+            let seconds = float_of_int seconds in
+
+            word_count /. seconds *. 60.0
+            |> int_of_float
+end
+
 type model = {
-      user: string;
+      stats: Stats.t;
       page: page;
 }
 
 let empty () = {
-      user = "<USER NAME>";
+      stats = Stats.empty;
       page = Menu Menu.(empty ())
 }
 
@@ -29,7 +50,7 @@ let update term loop model lmsg rmsg  =
             | Navigation.Exit ->
                   Lwt.return_unit
             | Navigation.ToEdit ->
-                  loop 
+                  loop
                         { model with page = Edit Edit.(empty ()) }
                         Edit.(get_string ())
                         Edit.(get_never ())
