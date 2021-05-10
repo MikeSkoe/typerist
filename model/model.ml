@@ -11,27 +11,6 @@ type page =
       | Edit of Edit.model
       | Menu of Menu.model
 
-module Stats = struct
-      type t = {
-            chars_per_sec: int;
-            words_per_minute: int;
-      }
-
-      let empty = {
-            chars_per_sec = 0;
-            words_per_minute = 0;
-      }
-
-      let get_cps str_len seconds = str_len / seconds
-
-      let get_wpm word_count seconds =
-            let word_count = float_of_int word_count in
-            let seconds = float_of_int seconds in
-
-            word_count /. seconds *. 60.0
-            |> int_of_float
-end
-
 type model = {
       stats: Stats.t;
       page: page;
@@ -59,35 +38,39 @@ let update term loop model lmsg rmsg  =
                         { model with page = Menu Menu.(empty ()) }
                         Menu.(get_event term Menu.(empty ()))
                         Menu.(get_tick ())
+            | Navigation.SaveResult stats ->
+                  let page = Menu Menu.(empty ()) in
+                  let stats = Stats.make
+                        (max stats.chars_per_sec model.stats.chars_per_sec)
+                        (max stats.words_per_minute model.stats.words_per_minute)
+                  in
+                  loop
+                        { stats; page; }
+                        Menu.(get_event term Menu.(empty ()))
+                        Menu.(get_tick ())
             end
       | `Edit msg ->
-            begin match model.page with 
-            | Edit page ->
-                  let page, lmsg, rmsg = Edit.update term page msg lmsg rmsg in
-                  loop
-                        { model with page = Edit page }
-                        lmsg
-                        rmsg
-            | _ ->
-                  let page, lmsg, rmsg = Edit.update term Edit.(empty ()) msg lmsg rmsg in
-                  loop
-                        { model with page = Edit page }
-                        lmsg
-                        rmsg
-            end
+            let page =
+                  begin match model.page with 
+                  | Edit page -> page
+                  | _ -> Edit.empty ()
+                  end
+            in
+            let page, lmsg, rmsg = Edit.update term page msg lmsg rmsg in
+            loop
+                  { model with page = Edit page }
+                  lmsg
+                  rmsg
       | `Menu msg ->
-            begin match model.page with
-            | Menu page ->
-                  let page, lmsg, rmsg = Menu.update term page msg lmsg rmsg  in
-                  loop
-                        { model with page = Menu page }
-                        lmsg
-                        rmsg
-            | _ ->
-                  let page, lmsg, rmsg = Menu.update term Menu.(empty ()) msg lmsg rmsg in
-                  loop
-                        { model with page = Menu page }
-                        lmsg
-                        rmsg
-            end
+            let page =
+                  begin match model.page with
+                  | Menu page -> page
+                  | _ ->  Menu.empty ()
+                  end
+            in
+            let page, lmsg, rmsg = Menu.update term page msg lmsg rmsg  in
+            loop
+                  { model with page = Menu page }
+                  lmsg
+                  rmsg
 

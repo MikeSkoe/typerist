@@ -4,7 +4,8 @@ open Ui_infix
 
 module Running = {
     let createElement = (
-        ~char_per_sec: int,
+        ~words_per_minute: float,
+        ~chars_per_sec: float,
         ~typed: string,
         ~current: string,
         ~target: list(string),
@@ -12,7 +13,8 @@ module Running = {
         ~children as _=[],
         ()
     ) => {
-        let time = Printf.sprintf("CPS: %d", char_per_sec);
+        let wpm = Printf.sprintf("WPM: %f", words_per_minute);
+        let cps = Printf.sprintf("CPS: %f", chars_per_sec);
         let (target_hd, target_tl) = switch (target) {
             | [] => ("" , "")
             | [head, ...tail] => (
@@ -25,7 +27,8 @@ module Running = {
             )
         };
         <VList>
-            <Text text=time width pad=(0,0,0,1)/>
+            <Text text=cps width />
+            <Text text=wpm width pad=(0,0,0,1)/>
             <HList>
                 <Text
                     text=typed
@@ -48,13 +51,18 @@ module Running = {
 
 module Done = {
     let createElement = (
-        ~char_per_sec: int,
+        ~words_per_minute: float,
+        ~chars_per_sec: float,
         ~width,
         ~children as _=[],
         ()
     ) => {
-        let time = Printf.sprintf("CPS: %d", char_per_sec);
-        <Text text=time width pad=(0,0,0,1)/>
+        let wpm = Printf.sprintf("WPM: %f", words_per_minute);
+        let cps = Printf.sprintf("CPS: %f", chars_per_sec);
+        <VList>
+            <Text text=cps width />
+            <Text text=wpm width pad=(0,0,0,1)/>
+        </VList>
     };
 };
 
@@ -66,14 +74,16 @@ let createElement = (
 ) => {
     switch (model.typing) {
         | Running(typing) => <Running
-            char_per_sec=model.char_per_sec
+            words_per_minute=model.stats.words_per_minute
+            chars_per_sec=model.stats.chars_per_sec
             typed=typing.typed
             current=typing.current
             target=typing.target
             width
         />
         | Done => <Done
-            char_per_sec=model.char_per_sec
+            words_per_minute=model.stats.words_per_minute
+            chars_per_sec=model.stats.chars_per_sec
             width
         />
     };

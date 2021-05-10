@@ -16,7 +16,7 @@ type typing =
       | Done
 
 type model = {
-      char_per_sec: int;
+      stats: Stats.t;
       initial_text: string;
       initial_time: int;
       typing: typing;
@@ -25,9 +25,9 @@ type model = {
 let initial_text = "Fake loading..."
 
 let empty () = {
+      stats = Stats.empty;
       initial_text = initial_text;
       initial_time = Unix.time () |> int_of_float;
-      char_per_sec = 0;
       typing = Running {
             typed = "";
             current = "";
@@ -43,10 +43,14 @@ let get_char_per_sec initial_time typed =
 
 let tick model =
       match model.typing with
-      | Running typing -> {
-            model with
-            char_per_sec = get_char_per_sec model.initial_time typing.typed;
-      }
+      | Running typing ->
+            let curr_time = Unix.time () |> int_of_float in
+            let ellapsed = curr_time - model.initial_time in
+            let stats = Stats.update typing.typed ellapsed in
+            {
+                  model with
+                  stats = stats;
+            }
       | Done -> model
 
 let type_char chr model =
@@ -106,10 +110,11 @@ let set_string str model =
       }
       | Done -> model
 
-let get_event term typing =
+let get_event term model =
       (Notty_lwt.Term.events term |> Lwt_stream.get) >|= fun event ->
-      match typing, event with
-      | Done, Some (`Key (`Backspace, _)) -> `Navigation Navigation.ToMenu
+      match model.typing, event with
+      | Done, Some (`Key _) ->
+            `Navigation (Navigation.SaveResult model.stats)
       | _, Some (`Key (`ASCII chr, _)) -> `Edit (Key chr)
       | _, Some (`Key (`Backspace, _)) -> `Edit Backspace
       | _, Some (`Resize _) -> `Edit Resize
@@ -144,7 +149,7 @@ let get_never () = Lwt_unix.sleep 999.0 >|= fun () -> `Edit Tick
 let update term model msg lmsg rmsg =
       match msg with
       | Resize ->
-            let lmsg = get_event term model.typing in
+            let lmsg = get_event term model in
             (model, lmsg, rmsg)
       | Tick -> 
             let model = tick model in
@@ -152,7 +157,7 @@ let update term model msg lmsg rmsg =
             (model, lmsg, rmsg)
       | Backspace ->
             let model = backspace model in
-            let lmsg = get_event term model.typing in
+            let lmsg = get_event term model in
             (model, lmsg, rmsg)
       | Key chr ->
             let model = type_char chr model in
@@ -161,13 +166,13 @@ let update term model msg lmsg rmsg =
                   | Running typing ->
                         if String.equal typing.typed model.initial_text
                         then (get_never (), get_never ())
-                        else (get_event term model.typing, rmsg)
-                  | Done -> (get_event term model.typing, get_never ())
+                        else (get_event term model, rmsg)
+                  | Done -> (get_event term model, get_never ())
                   end
             in
             (model, lmsg, rmsg)
       | SetString str ->
             let model = set_string str model in
-            let lmsg = get_event term model.typing in
+            let lmsg = get_event term model in
             let rmsg = get_tick () in
             (model, lmsg, rmsg)
