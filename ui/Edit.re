@@ -4,61 +4,58 @@ open Ui_infix
 
 module Running = {
     let createElement = (
-        ~words_per_minute: float,
-        ~chars_per_sec: float,
-        ~typed: string,
-        ~current: string,
-        ~target: list(string),
+        ~stats: Stats.t,
+        ~typing: Edit.running_typing,
         ~width,
         ~children as _=[],
         ()
     ) => {
-        let wpm = Printf.sprintf("WPM: %f", words_per_minute);
-        let cps = Printf.sprintf("CPS: %f", chars_per_sec);
-        let (target_hd, target_tl) = switch (target) {
-            | [] => ("" , "")
-            | [head, ...tail] => (
-                head,
-                if (tail === []) {
-                    "";
-                } else {
-                    String.concat(" ", tail);
-                }
-            )
+        let wpm = Printf.sprintf("WPM: %f", stats.words_per_minute);
+        let cps = Printf.sprintf("CPS: %f", stats.chars_per_sec);
+        let (target_hd, target_tl) = switch (typing.target) {
+            | [] => ("" , [])
+            | [head, ...tail] => (head, tail)
         };
+
         <VList>
             <Text text=cps width />
             <Text text=wpm width pad=(0,0,0,1)/>
-            <HList>
-                <Text
-                    text=typed
-                    width
-                    style=A.(fg(gray(10)))
-                    pad=(typed == "" ? (0,0,0,0) : (0,1,0,0))
-                />
-                <Text
+            <HList width>
+                ...(List.map(
+                    text => <Text
+                        text
+                        width
+                        style=A.(fg(gray(10)))
+                        pad=(typing.typed == [] ? (0,0,0,0) : (0,1,0,0))
+                    />,
+                    typing.typed
+                )
+                @ [<Text
                     text=target_hd
                     width
                     style=A.(fg(black) <+> bg(white))
-                    pad=(0,1,0,0)
-                />
-                <Text text=target_tl width/>
+                    pad=(0,0,0,0)
+                /> ]
+                @ List.map(
+                    text => <Text text width pad=(1,0,0,0)/>,
+                    target_tl
+                ))
             </HList>
-            <Text text=current width/>
+            <Text text=typing.current width/>
         </VList>;
     };
 };
 
 module Done = {
     let createElement = (
-        ~words_per_minute: float,
-        ~chars_per_sec: float,
+        ~stats: Stats.t,
         ~width,
         ~children as _=[],
         ()
     ) => {
-        let wpm = Printf.sprintf("WPM: %f", words_per_minute);
-        let cps = Printf.sprintf("CPS: %f", chars_per_sec);
+        let wpm = Printf.sprintf("WPM: %f", stats.words_per_minute);
+        let cps = Printf.sprintf("CPS: %f", stats.chars_per_sec);
+
         <VList>
             <Text text=cps width />
             <Text text=wpm width pad=(0,0,0,1)/>
@@ -74,16 +71,12 @@ let createElement = (
 ) => {
     switch (model.typing) {
         | Running(typing) => <Running
-            words_per_minute=model.stats.words_per_minute
-            chars_per_sec=model.stats.chars_per_sec
-            typed=typing.typed
-            current=typing.current
-            target=typing.target
+            stats=model.stats
+            typing=typing
             width
         />
         | Done => <Done
-            words_per_minute=model.stats.words_per_minute
-            chars_per_sec=model.stats.chars_per_sec
+            stats=model.stats
             width
         />
     };

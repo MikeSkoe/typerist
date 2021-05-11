@@ -7,12 +7,14 @@ type msg =
       | Resize
       | SetString of string
 
+type running_typing = {
+      typed: string list;
+      current: string;
+      target: string list;
+}
+
 type typing =
-      | Running of {
-            typed: string;
-            current: string;
-            target: string list;
-      }
+      | Running of running_typing
       | Done
 
 type model = {
@@ -29,7 +31,7 @@ let empty () = {
       initial_text = initial_text;
       initial_time = Unix.time () |> int_of_float;
       typing = Running {
-            typed = "";
+            typed = [];
             current = "";
             target = String.split_on_char ' ' initial_text;
       }
@@ -65,9 +67,9 @@ let type_char chr model =
                         typing = Running {
                               current = ""; 
                               typed =
-                                    if typing.typed = ""
-                                    then current
-                                    else typing.typed ^ " " ^ current;
+                                    if typing.typed = []
+                                    then [current]
+                                    else [String.(concat " " typing.typed) ^ " " ^ current];
                               target = target_tl;
                         }
                   }
@@ -164,7 +166,7 @@ let update term model msg lmsg rmsg =
             let lmsg, rmsg =
                   begin match model.typing with
                   | Running typing ->
-                        if String.equal typing.typed model.initial_text
+                        if String.equal String.(concat " " typing.typed) model.initial_text
                         then (get_never (), get_never ())
                         else (get_event term model, rmsg)
                   | Done -> (get_event term model, get_never ())

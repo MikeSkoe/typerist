@@ -31,7 +31,8 @@ let get_wpm str seconds =
       in
       word_count /. seconds *. 60.
 
-let update str seconds =
+let update strs seconds =
+      let str = String.(concat " " strs) in
       let cps = get_cps str seconds in
       let wpm = get_wpm str seconds in
       {
