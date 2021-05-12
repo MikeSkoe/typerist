@@ -1,11 +1,11 @@
 type t = {
-      chars_per_sec: float;
-      words_per_minute: float;
+      chars_per_sec: int;
+      words_per_minute: int;
 }
 
 let empty = {
-      chars_per_sec = 0.;
-      words_per_minute = 0.;
+      chars_per_sec = 0;
+      words_per_minute = 0;
 }
 
 let make chars_per_sec words_per_minute = {
@@ -15,11 +15,13 @@ let make chars_per_sec words_per_minute = {
 
 let get_cps str seconds =
       let seconds = float_of_int seconds in
-      let str_len = str
+      let str_len =
+            str
             |> String.length
             |> float_of_int
       in
       str_len /. seconds
+      |> int_of_float
 
 let get_wpm str seconds =
       let seconds = float_of_int seconds in
@@ -30,6 +32,7 @@ let get_wpm str seconds =
             |> float_of_int
       in
       word_count /. seconds *. 60.
+      |> int_of_float
 
 let update strs seconds =
       let str = String.(concat " " strs) in

@@ -24,6 +24,19 @@ type model = {
       typing: typing;
 }
 
+let is_correct typing =
+      match typing.target, typing.current with
+      | [], _ -> true
+      | _, "" -> true
+      | head :: _, current ->
+            let len = min
+                  (String.length head)
+                  (String.length current)
+            in
+            let sub_head = String.sub head 0 len in
+
+            String.equal current sub_head
+
 let initial_text = "Fake loading..."
 
 let empty () = {
@@ -69,7 +82,7 @@ let type_char chr model =
                               typed =
                                     if typing.typed = []
                                     then [current]
-                                    else [String.(concat " " typing.typed) ^ " " ^ current];
+                                    else typing.typed @ [current];
                               target = target_tl;
                         }
                   }

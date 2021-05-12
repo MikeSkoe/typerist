@@ -19,12 +19,12 @@ let fit_string = (str, width) => {
 
 let createElement = (
     ~text,
-    ~width,
+    ~width=3000,
     ~style=A.empty,
     ~pad as (l,r,t,b)=(0,0,0,0),
     ~children as _=[],
     ()
-) => 
+) =>
     fit_string(text, width)
         |> List.map (I.string(style))
         |> List.map (I.pad(~l, ~r, ~t, ~b))

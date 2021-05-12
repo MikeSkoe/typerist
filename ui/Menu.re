@@ -2,7 +2,7 @@ open Notty
 open Ui_infix
 
 let createElement = (
-    ~width,
+    // ~width,
     ~model: Pages.Menu.model,
     ~children as _=[],
     ()
@@ -15,12 +15,10 @@ let createElement = (
         <Text
             text="start"
             style=(active_if(Pages.Menu.Start))
-            width
         />
         <Text
             text="exit"
             style=(active_if(Pages.Menu.Exit))
-            width
         />
     </VList>;
 };
