@@ -37,12 +37,12 @@ module Running = {
                             ? A.(fg(black) <+> bg(white))
                             : A.(fg(black) <+> bg(red))
                         )
-                        pad=(0,0,0,0)
+                        pad=(0,1,0,0)
                     />,
                     [target_hd]
                 ) 
                 @ List.map(
-                    text => <Text text pad=(1,0,0,0)/>,
+                    text => <Text text pad=(0,1,0,0)/>,
                     target_tl
                 ))
             </HList>

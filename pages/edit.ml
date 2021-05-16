@@ -138,25 +138,8 @@ let get_event term model =
 let get_to_menu () = Lwt.return @@ `Navigation Navigation.ToMenu
 
 let get_string () =
-      let open Cohttp_lwt_unix in
-      let open Yojson.Basic in
-      let to_string = Cohttp_lwt.Body.to_string in
-      let request =
-            "https://api.adviceslip.com/advice"
-            |> Uri.of_string
-            |> Client.get
-      in 
-      request >>= fun (_, body) ->
-      to_string body >>= fun body ->
-
-      let json = from_string body in
-      let slip =
-            json
-            |> Util.member "slip"
-            |> Util.member "advice"
-            |> Util.to_string
-      in
-      Lwt.return @@ `Edit (SetString slip)
+      (Api.get_random_text ()) >>= fun text ->
+      Lwt.return @@ `Edit (SetString text)
 
 let get_tick () = Lwt_unix.sleep 1.0 >|= fun () -> `Edit Tick
 let get_never () = Lwt_unix.sleep 999.0 >|= fun () -> `Edit Tick

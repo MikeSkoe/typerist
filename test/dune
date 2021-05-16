@@ -1,3 +1,0 @@
-(test
- (name hlist)
- (libraries pages))
